@@ -14,14 +14,8 @@ export default function Profile () {
     const userName = localStorage.getItem('userName');
     const userStore = localStorage.getItem('userStore');
 
-    const data = [
-        ['Foo', 'programmer'],
-        ['Bar', 'bus driver'],
-        ['Moo', 'Reindeer Hunter']
-     ];
-
      useEffect(() => {
-        axios.get('profile', {
+        axios.get('inventory', {
             headers: {
                 Authorization: userLogin,
             }
@@ -51,18 +45,20 @@ export default function Profile () {
         history.push('/');
     }
 
-    function download_txt(  ) {
-        var txt = 'Name,Title\n';
-        data.forEach(function(row) {
-                txt += row.join(',');
-                txt += "\n";
+    async function download_txt(inventory_id) {
+        let { data } = await axios.get(`/inventory?id=${inventory_id}`);
+        let file = '';
+
+        data.map(item => {
+            let ean = item.ean.padStart(13, '0');
+            let quantidade = new String(item.quantity).padStart(6, '0');
+            file += `0000000${ean}${quantidade}\n`;
         });
 
-        console.log(txt);
-        var hiddenElement = document.createElement('a');
-        hiddenElement.href = 'data:text/txt;charset=utf-8,' + encodeURI(txt);
+        let hiddenElement = document.createElement('a');
+        hiddenElement.href = 'data:text/txt;charset=utf-8,' + encodeURI(file);
         hiddenElement.target = '_blank';
-        hiddenElement.download = 'people.txt';
+        hiddenElement.download = `Inventario ${inventory_id}.txt`;
         hiddenElement.click();
     }
 
