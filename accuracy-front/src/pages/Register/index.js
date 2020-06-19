@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi'
-
-
-// import api from '../../services/api';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.min.css'; 
 import axios from 'axios';
 import './styles.css';
+
 
 export default function Register() {
     const [name, setName] = useState('');
@@ -26,16 +26,21 @@ export default function Register() {
         });
 
        try{
-
-        const response = await axios.post('/users', data);
-
-        alert(`${response.data.name} Seu cadastro foi realizado com sucesso !`);
-
-        history.push('/')
-
+        await axios.post('/users', data)
+            .then(function(response){
+                if(response.status === 200){
+                    toast.success(`${response.data.name} Seu cadastro foi realizado com sucesso !`);
+                    setTimeout(() =>{
+                        history.push('/')
+                    }, 3250);
+                }
+            });
        } catch (err) {
-        alert(`${err}`);
+        if(err.response.status === 400) {
+            toast.error(err.response.data.error);
+        }
        }
+       
     }
 
 
@@ -59,7 +64,7 @@ export default function Register() {
                     />
                     
                     <input
-                        placeholder="Email"
+                        placeholder="Usuário"
                         value={login}
                         onChange={e => setLogin(e.target.value)} 
                     />
@@ -80,6 +85,7 @@ export default function Register() {
 
                     <button className="button" type="submit">Cadastrar</button>
                 </form>
+                <ToastContainer />
             </div>
         </div>
     );

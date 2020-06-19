@@ -1,52 +1,64 @@
-import React, { useState, useEffect, Text } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useHistory, Link } from 'react-router-dom';
 import { FiPower, FiTrash2, FiDownload } from 'react-icons/fi';
-
+import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
+import moment from 'moment';
+import MomentUtils from '@date-io/moment';
+import "moment/locale/pt-br";
 import axios from 'axios';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.min.css'; 
 import './styles.css';
 
-export default function Profile () {
+
+export default function Profile() {
+    
     const [inventories, setInventories] = useState([]);
 
+    const [selectedDate, handleDateChange] = useState('');
+
+
     const history = useHistory();
+
+    moment.locale("pt-BR");
 
     const userLogin = localStorage.getItem('userLogin');
     const userName = localStorage.getItem('userName');
     const userStore = localStorage.getItem('userStore');
 
      useEffect(() => {
-        axios.get('inventory', {
+        axios.get('inventoryGroup', {
             headers: {
                 Authorization: userLogin,
             }
         }).then(response => {
             setInventories(response.data);
-        })
+        });
     }, [userLogin]);
 
-    async function handleDeleteInventorie(id) {
+
+    async function handleDeleteInventorie(inventory_id) {
         try {
-            await axios.delete(`inventory/${id}`, {
+            await axios.delete(`/inventory?id=${inventory_id}`, {
                 headers: {
-                    Authorization: userLogin,
+                    Authorizatnaoion: userLogin,
                 }
             });
-
-            setInventories(inventories.filter(inventorie => inventorie.id !== id));
-
+            toast.success(`Inventário ${inventory_id} excluído com sucesso !`);
         } catch (err) {
-            alert('Erro ao deletar inventário, tente novamente.');
+            toast.error(`Erro ao deletar inventário, tente novamente. ${err}`);
         }
+        setInventories(inventories.filter(inventorie => parseInt(inventorie.inventory_id) !== parseInt(inventory_id)));
     }
 
     function handleLogout() {
         localStorage.clear();
-
         history.push('/');
     }
 
-    async function download_txt(inventory_id) {
-        let { data } = await axios.get(`/inventory?id=${inventory_id}`);
+
+    async function download_txt(collector) {
+        let { data } = await axios.get(`/inventory?collector=${collector}`);
         let file = '';
 
         data.map(item => {
@@ -58,13 +70,34 @@ export default function Profile () {
         let hiddenElement = document.createElement('a');
         hiddenElement.href = 'data:text/txt;charset=utf-8,' + encodeURI(file);
         hiddenElement.target = '_blank';
-        hiddenElement.download = `Inventario ${inventory_id}.txt`;
+        hiddenElement.download = `Coletor ${collector}.txt`;
         hiddenElement.click();
+    }
+
+
+    async function dataFilter(date) {
+        handleDateChange(date);
+        try{
+            await axios.get(`/inventory?created_at=${moment(date).format("DD/MM/YYYY")}`).then(response => {
+                if(response.data.length > 0) {
+                    toast.success('Inventário encontrado.');
+                    setInventories(response.data);
+                } else {
+                    toast.error('Nenhum inventário encontrado.');
+                    axios.get(`/inventory`).then(response => {
+                        setInventories(response.data);
+                    })
+                }
+            })
+        } catch(error) {
+            toast.error(`Erro ao filtrar inventários ${error}`);
+        }
     }
 
     return (
         <div className="profile-container">
             <header>
+                <a href="">Accuracy</a>
                 <span>Bem vindo(a), {userName}</span>
 
                 <span>Loja: {userStore}</span>
@@ -75,42 +108,55 @@ export default function Profile () {
 
             <h1>Inventários Cadastrados</h1>
 
-            {<ul>
+            <MuiPickersUtilsProvider libInstance={moment} utils={MomentUtils} locale="pt-BR">
+                <KeyboardDatePicker
+                    value={selectedDate}
+                    placeholder="Escolha uma data"
+                    onChange={date => dataFilter(date)}
+                    format="DD/MM/yyyy"
+                />
+            </MuiPickersUtilsProvider>
+
+            <ToastContainer />
+
+            {<div className="inventorie-list">
+                    <tbody className="list-title">
+                            <tr>
+                                <td>Coletor:</td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Quantidade de Registros:</td>
+                            </tr>
+                    </tbody>
+                    
                 {inventories.map(inventorie => (
-                    <li key={inventorie.id}>
-                         <b>ID:</b>
-                         <p>{inventorie.id}</p>
+                    <div>
+                        <div className="separator"></div>
+                        <tbody className="list-content" key={inventorie.id}>
+                            <tr>      
+                                <td>{inventorie.collector}</td>
+                            </tr>
 
-                         <b>Usuário:</b>
-                         <p>{inventorie.user}</p>
-     
-                         <b>Area:</b>
-                         <p>{inventorie.area}</p>
+                            <tr>             
+                                <td>{inventorie.count}</td>
+                            </tr>
+                            
+                            <div className="inventorie-button">
+                                <button onClick={() => handleDeleteInventorie(inventorie.id)}
+                                type="button" >
+                                    <FiTrash2 scale={20} color="#a8a8b3" />
+                                </button>
 
-                         <b>Subarea:</b>
-                         <p>{inventorie.subarea}</p>
-
-                         <b>Quantidade Packing:</b>
-                         <p>{inventorie.quantity_packing}</p>
-
-                         <b>Seq Produto:</b>
-                         <p>{inventorie.seqproduto}</p>
-     
-                         
-                         <div>
-                            <button onClick={() => handleDeleteInventorie(inventorie.id)}
-                            type="button" >
-                                <FiTrash2 scale={20} color="#a8a8b3" />
-                            </button>
-
-                            <button onClick={() => download_txt(inventorie.id)}
-                            type="button" >
-                                <FiDownload scale={20} color="#a8a8b3" />
-                            </button>
-                         </div>
-                     </li>
+                                <button onClick={() => download_txt(inventorie.collector)}
+                                type="button" >
+                                    <FiDownload scale={20} color="#a8a8b3" />
+                                </button>
+                            </div>
+                        </tbody>
+                     </div>
                 ))}
-            </ul>}
+            </div>}
         </div>
     );
 }

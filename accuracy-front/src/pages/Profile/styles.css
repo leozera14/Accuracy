@@ -44,62 +44,59 @@
     margin-bottom: 24px;
 }
 
-.profile-container ul {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-gap: 24px;
-    list-style: none;
+.inventorie-list tbody {
+    display: flex;
+    width: 100%;
+    justify-content: space-evenly;
+    align-items: center;
+    line-height: 3vh;
 }
 
-.profile-container ul li {
-    background: #fff;
-    padding: 24px;
-    border: 8px;
+.inventorie-list tbody tr {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.inventorie-list .list-title tr:first-child {
+    margin-left: 65px;
+}
+
+.list-content {
     position: relative;
 }
 
-.profile-container ul li div {
-    position: absolute;
-    right: 24px;
-    top: 24px;
+.inventorie-button {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    position: absolute;
+    right: 0px;
 }
 
-.profile-container ul li div button {
+.inventorie-button button {
     font-size: 20px;
     border: none;
     transition: opacity 0.2s;
 }
 
-.profile-container ul li div button svg {
+.inventorie-button button svg {
     color: red !important;
     background-color: none !important;
 }
 
-.profile-container ul li div button:first-child {
-    margin-bottom: 15px;
+.inventorie-button button:first-child {
+    margin-right: 10px;
 }
 
-.profile-container ul li div button:hover {
+.inventorie-button button:hover {
     opacity: 0.8;
 }
 
-.profile-container ul li b {
-    display: block;
-    margin-bottom: 16px;
-    color: #41414d;
-}
-
-.profile-container ul li p + b {
-    margin-top: 32px;
-}
-
-.profile-container ul li p {
-    color: #737380;
-    line-height: 21px;
-    font-size: 16px;
+.separator {
+    height: 2px;
+    background-color: rgba(0, 0, 0, .2);
+    margin: 10px 0;
+    position: relative;
 }
 
 
