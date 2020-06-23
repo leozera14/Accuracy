@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory, Link } from 'react-router-dom';
-import { FiPower, FiTrash2, FiDownload } from 'react-icons/fi';
+import { useHistory } from 'react-router-dom';
+import { FiPower, FiPlus, FiDownload } from 'react-icons/fi';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
 import moment from 'moment';
 import MomentUtils from '@date-io/moment';
@@ -36,19 +36,16 @@ export default function Profile() {
         });
     }, [userLogin]);
 
-
-    async function handleDeleteInventorie(inventory_id) {
+    async function collectorDetail(collector) {
         try {
-            await axios.delete(`/inventory?id=${inventory_id}`, {
-                headers: {
-                    Authorizatnaoion: userLogin,
-                }
-            });
-            toast.success(`Inventário ${inventory_id} excluído com sucesso !`);
+            localStorage.setItem('collector', collector);
+            toast.success(`Dados do coletor ${collector} sendo carregados.`);
+            setTimeout(() =>{
+                history.push('/details')
+            }, 1500);
         } catch (err) {
-            toast.error(`Erro ao deletar inventário, tente novamente. ${err}`);
+            toast.error(`${err}`);
         }
-        setInventories(inventories.filter(inventorie => parseInt(inventorie.inventory_id) !== parseInt(inventory_id)));
     }
 
     function handleLogout() {
@@ -78,13 +75,13 @@ export default function Profile() {
     async function dataFilter(date) {
         handleDateChange(date);
         try{
-            await axios.get(`/inventory?created_at=${moment(date).format("DD/MM/YYYY")}`).then(response => {
+            await axios.get(`/inventoryGroup?created_at=${moment(date).format("DD/MM/YYYY")}`).then(response => {
                 if(response.data.length > 0) {
                     toast.success('Inventário encontrado.');
                     setInventories(response.data);
                 } else {
                     toast.error('Nenhum inventário encontrado.');
-                    axios.get(`/inventory`).then(response => {
+                    axios.get(`/inventoryGroup`).then(response => {
                         setInventories(response.data);
                     })
                 }
@@ -113,7 +110,9 @@ export default function Profile() {
                     value={selectedDate}
                     placeholder="Escolha uma data"
                     onChange={date => dataFilter(date)}
+                    helperText={''}
                     format="DD/MM/yyyy"
+                    error={null}
                 />
             </MuiPickersUtilsProvider>
 
@@ -143,9 +142,9 @@ export default function Profile() {
                             </tr>
                             
                             <div className="inventorie-button">
-                                <button onClick={() => handleDeleteInventorie(inventorie.id)}
+                                <button onClick={() => collectorDetail(inventorie.collector)}
                                 type="button" >
-                                    <FiTrash2 scale={20} color="#a8a8b3" />
+                                    <FiPlus scale={20} color="#a8a8b3" />
                                 </button>
 
                                 <button onClick={() => download_txt(inventorie.collector)}
