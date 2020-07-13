@@ -22,19 +22,19 @@ export default function Profile() {
 
     moment.locale("pt-BR");
 
-    const userLogin = localStorage.getItem('userLogin');
+    const token = localStorage.getItem('token');
     const userName = localStorage.getItem('userName');
     const userStore = localStorage.getItem('userStore');
 
      useEffect(() => {
         axios.get('inventoryGroup', {
             headers: {
-                Authorization: userLogin,
+                Authorization: token,
             }
         }).then(response => {
             setInventories(response.data);
         });
-    }, [userLogin]);
+    }, [token]);
 
     async function collectorDetail(collector) {
         try {
@@ -59,9 +59,10 @@ export default function Profile() {
         let file = '';
 
         data.map(item => {
+            let init = new String().padStart(7, '0');
             let ean = item.ean.padStart(13, '0');
             let quantidade = new String(item.quantity).padStart(6, '0');
-            file += `0000000${ean}${quantidade}\n`;
+            file += `${init}${ean}${quantidade}\n`;
         });
 
         let hiddenElement = document.createElement('a');

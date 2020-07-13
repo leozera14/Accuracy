@@ -26,7 +26,7 @@ export default function Register() {
         });
 
        try{
-        await axios.post('/users', data)
+        await axios.post('/users/register', data)
             .then(function(response){
                 if(response.status === 200){
                     toast.success(`${response.data.name} Seu cadastro foi realizado com sucesso !`);

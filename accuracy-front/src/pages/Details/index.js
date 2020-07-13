@@ -13,7 +13,7 @@ export default function Details() {
 
     const history = useHistory();
 
-    const userLogin = localStorage.getItem('userLogin');
+    const token = localStorage.getItem('token');
     const userName = localStorage.getItem('userName');
     const userStore = localStorage.getItem('userStore');
     const collector = localStorage.getItem('collector');
@@ -21,19 +21,19 @@ export default function Details() {
      useEffect(() => {
         axios.get(`/inventory?collector=${collector}`, {
             headers: {
-                Authorization: userLogin,
+                Authorization: token,
             }
         }).then(response => {
             setInventories(response.data);
         });
-    }, [userLogin]);
+    }, [token]);
 
 
     async function handleDeleteInventorie(inventory_id) {
         try {
             await axios.delete(`/inventory?id=${inventory_id}`, {
                 headers: {
-                    Authorizatnaoion: userLogin,
+                    Authorizatnaoion: token,
                 }
             });
             toast.success(`Inventário ${inventory_id} excluído com sucesso !`);

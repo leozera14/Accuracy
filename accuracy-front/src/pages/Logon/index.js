@@ -15,14 +15,18 @@ export default function Logon() {
         e.preventDefault();
 
         try {
-            const response = await axios.post('sessions', { login, password });
-
-            localStorage.setItem('userLogin', login);
-            localStorage.setItem('userName', response.data.name);
-            localStorage.setItem('userStore', response.data.store);
-            
-            history.push('/profile');
-
+            await axios.post('/users/login', { login, password })
+                .then(function(response){ 
+                    if(response.status === 200) {
+                        localStorage.setItem('token', response.data.token);
+                        localStorage.setItem('userName', response.data.name);
+                        localStorage.setItem('userStore', response.data.store);
+                        toast.success("Usuario encontrado, redirecionando...");
+                        setTimeout(() =>{
+                            history.push('/profile');   
+                        }, 1750);
+                    }
+                })
         } catch (err) {
             toast.error('Usuário ou senha incorretos, tente novamente.');
         }
