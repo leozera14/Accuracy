@@ -33,7 +33,7 @@ export default function Details() {
         try {
             await axios.delete(`/inventory?id=${inventory_id}`, {
                 headers: {
-                    Authorizatnaoion: token,
+                    Authorization: token,
                 }
             });
             toast.success(`Inventário ${inventory_id} excluído com sucesso !`);
