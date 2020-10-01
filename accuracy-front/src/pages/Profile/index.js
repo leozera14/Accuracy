@@ -1,48 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import ReactDOM from 'react-dom'
 import { useHistory } from 'react-router-dom';
-import { FiPower, FiPlus, FiDownload } from 'react-icons/fi';
+import { FiPower, FiPlus, FiDownload, FiRefreshCcw } from 'react-icons/fi';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
 import moment from 'moment';
 import MomentUtils from '@date-io/moment';
 import "moment/locale/pt-br";
 import axios from 'axios';
+import { useFetch } from '../../hooks/useFetch';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css'; 
 import './styles.css';
 
 
 export default function Profile() {
-    
+
     const [inventories, setInventories] = useState([]);
+
+    const filterInventories = Object.values(inventories);
 
     const [selectedDate, handleDateChange] = useState('');
 
+    const history = useHistory();  
 
-    const history = useHistory();
+    const { data } = useFetch('inventoryGroup');
+    
+    if(!data) {
+        return <p>Carregando...</p>
+    }  
 
     moment.locale("pt-BR");
-
-    const token = localStorage.getItem('token');
+    
     const userName = localStorage.getItem('userName');
     const userStore = localStorage.getItem('userStore');
-
-     useEffect(() => {
-        axios.get('inventoryGroup', {
-            headers: {
-                Authorization: token,
-            }
-        }).then(response => {
-            setInventories(response.data);
-        });
-    }, [token]);
 
     async function collectorDetail(collector) {
         try {
             localStorage.setItem('collector', collector);
-            toast.success(`Dados do coletor ${collector} sendo carregados.`);
-            setTimeout(() =>{
-                history.push('/details')
-            }, 1500);
+            history.push(`/details/${collector}`)
         } catch (err) {
             toast.error(`${err}`);
         }
@@ -72,30 +67,32 @@ export default function Profile() {
         hiddenElement.click();
     }
 
-
     async function dataFilter(date) {
         handleDateChange(date);
-        try{
-            await axios.get(`/inventoryGroup?created_at=${moment(date).format("DD/MM/YYYY")}`).then(response => {
+        date = moment(date).format("DD/MM/YYYY");
+        try{   
+            await axios.get(`/inventoryGroup?created_at=${date}`).then(response => {
                 if(response.data.length > 0) {
                     toast.success('Inventário encontrado.');
-                    setInventories(response.data);
+                        setInventories(response.data);
                 } else {
                     toast.error('Nenhum inventário encontrado.');
                     axios.get(`/inventoryGroup`).then(response => {
                         setInventories(response.data);
                     })
-                }
+                }       
             })
         } catch(error) {
             toast.error(`Erro ao filtrar inventários ${error}`);
-        }
+        }   
     }
+
+    
 
     return (
         <div className="profile-container">
             <header>
-                <a href="">Accuracy</a>
+                <h1>Accuracy</h1>
                 <span>Bem vindo(a), {userName}</span>
 
                 <span>Loja: {userStore}</span>
@@ -104,22 +101,27 @@ export default function Profile() {
                 </button>
             </header>
 
-            <h1>Inventários Cadastrados</h1>
+            <h1 className="registered-h1">Inventários Cadastrados</h1>
 
-            <MuiPickersUtilsProvider libInstance={moment} utils={MomentUtils} locale="pt-BR">
-                <KeyboardDatePicker
-                    value={selectedDate}
-                    placeholder="Escolha uma data"
-                    onChange={date => dataFilter(date)}
-                    helperText={''}
-                    format="DD/MM/yyyy"
-                    error={null}
-                />
-            </MuiPickersUtilsProvider>
+            <div className="date-container">
+                <MuiPickersUtilsProvider libInstance={moment} utils={MomentUtils} locale="pt-BR">
+                    <KeyboardDatePicker
+                        value={selectedDate}
+                        placeholder="Escolha uma data"
+                        onChange={date => dataFilter(date)}
+                        helperText={''}
+                        format="DD/MM/yyyy"
+                        error={null}
+                    />
+                </MuiPickersUtilsProvider>
 
+                <div className="refresh">
+                    <a href="/profile" ><FiRefreshCcw size={18} color="#E02041" /></a>
+                </div>
+            </div>
             <ToastContainer />
 
-            {<div className="inventorie-list">
+            <div className="inventorie-list">
                     <tbody className="list-title">
                             <tr>
                                 <td>Coletor:</td>
@@ -129,34 +131,62 @@ export default function Profile() {
                                 <td>Quantidade de Registros:</td>
                             </tr>
                     </tbody>
-                    
-                {inventories.map(inventorie => (
-                    <div>
-                        <div className="separator"></div>
-                        <tbody className="list-content" key={inventorie.id}>
-                            <tr>      
-                                <td>{inventorie.collector}</td>
-                            </tr>
+                
+                {inventories.length <= 0          
+                    ?  data.map(inventorie => (
+                        <div>
+                            <div className="separator"></div>
+                            <tbody className="list-content" key={inventorie.id}>
+                                <tr>      
+                                    <td>{inventorie.collector}</td>
+                                </tr>
+            
+                                <tr>             
+                                    <td>{inventorie.count}</td>
+                                </tr>
+                                
+                                <div className="inventorie-button">
+                                    <button onClick={() => collectorDetail(inventorie.collector)}
+                                    type="button" >
+                                        <FiPlus scale={20} color="#a8a8b3" />
+                                    </button>
+            
+                                    <button onClick={() => download_txt(inventorie.collector)}
+                                    type="button" >
+                                        <FiDownload scale={20} color="#a8a8b3" />
+                                    </button>
+                                </div>
+                            </tbody>
+                        </div> 
+                    ))  
+                    : filterInventories.map(inventorie => (
+                        <div>
+                            <div className="separator"></div>
+                            <tbody className="list-content" key={inventorie.id}>
+                                <tr>      
+                                    <td>{inventorie.collector}</td>
+                                </tr>
 
-                            <tr>             
-                                <td>{inventorie.count}</td>
-                            </tr>
-                            
-                            <div className="inventorie-button">
-                                <button onClick={() => collectorDetail(inventorie.collector)}
-                                type="button" >
-                                    <FiPlus scale={20} color="#a8a8b3" />
-                                </button>
+                                <tr>             
+                                    <td>{inventorie.count}</td>
+                                </tr>
+                                
+                                <div className="inventorie-button">
+                                    <button onClick={() => collectorDetail(inventorie.collector)}
+                                    type="button" >
+                                        <FiPlus scale={20} color="#a8a8b3" />
+                                    </button>
 
-                                <button onClick={() => download_txt(inventorie.collector)}
-                                type="button" >
-                                    <FiDownload scale={20} color="#a8a8b3" />
-                                </button>
-                            </div>
-                        </tbody>
-                     </div>
-                ))}
-            </div>}
+                                    <button onClick={() => download_txt(inventorie.collector)}
+                                    type="button" >
+                                        <FiDownload scale={20} color="#a8a8b3"/>
+                                    </button>
+                                </div>
+                            </tbody>
+                        </div>
+                    ))
+                }
+            </div>
         </div>
     );
 }

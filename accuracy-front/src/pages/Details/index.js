@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useHistory, Link } from 'react-router-dom';
 import { FiPower, FiTrash2 } from 'react-icons/fi';
 import axios from 'axios';
+import { useFetch } from '../../hooks/useFetch';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css'; 
 import './styles.css';
@@ -18,16 +19,11 @@ export default function Details() {
     const userStore = localStorage.getItem('userStore');
     const collector = localStorage.getItem('collector');
 
-     useEffect(() => {
-        axios.get(`/inventory?collector=${collector}`, {
-            headers: {
-                Authorization: token,
-            }
-        }).then(response => {
-            setInventories(response.data);
-        });
-    }, [token]);
+    const { data } = useFetch(`/inventory?collector=${collector}`);
 
+    if(!data) {
+        return <p>Carregando...</p>
+    }
 
     async function handleDeleteInventorie(inventory_id) {
         try {
@@ -40,7 +36,7 @@ export default function Details() {
         } catch (err) {
             toast.error(`Erro ao deletar inventário, tente novamente. ${err}`);
         }
-        setInventories(inventories.filter(inventorie => parseInt(inventorie.inventory_id) !== parseInt(inventory_id)));
+        setInventories(data.filter(inventorie => parseInt(inventorie.inventory_id) !== parseInt(inventory_id)));
     }
 
     function handleLogout() {
@@ -51,7 +47,7 @@ export default function Details() {
     return (
         <div className="container">
             <header>
-                <a href="/profile">Accuracy</a>
+                <Link to={"/profile"}>Accuracy</Link>
 
                 <span>Dados do coletor: {collector}</span>
 
@@ -82,9 +78,8 @@ export default function Details() {
                             </tr>
                     </tbody>
                     
-                {inventories.map(inventorie => (
+                {data.map(inventorie => (
                     <div>
-                      {console.log(inventories)}
                         <div className="separator"></div>
                         <tbody className="content-list" key={inventorie.id}>
                             <tr>      
@@ -100,7 +95,7 @@ export default function Details() {
                             </tr>
                             
                             <div className="inventorie-button">
-                                <button onClick={() => handleDeleteInventorie(inventorie.inventory_id)}
+                                <button onClick={() => handleDeleteInventorie(inventorie.id)}
                                 type="button" >
                                     <FiTrash2 scale={20} color="#a8a8b3" />
                                 </button>

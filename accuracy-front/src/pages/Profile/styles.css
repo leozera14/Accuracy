@@ -5,9 +5,19 @@
     margin: 32px auto;
 }
 
+.registered-h1 {
+    text-align: center;
+    margin: 1em 0;
+}
+
+.date-container {
+    margin: 1em 0;
+}
+
 .profile-container header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 
 .profile-container header span {
@@ -99,4 +109,13 @@
     position: relative;
 }
 
+.date-container {
+    display: flex;
+    align-items: center;
+}
 
+.refresh {
+    text-decoration: none;
+    color: #E02041;
+    margin-left: 8px;
+}
